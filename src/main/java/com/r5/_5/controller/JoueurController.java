@@ -1,6 +1,9 @@
-package com.r5._5;
+package com.r5._5.controller;
 
 import org.springframework.web.bind.annotation.*;
+
+import com.r5._5.model.Joueur;
+import com.r5._5.repository.JoueurRepository;
 
 import java.util.List;
 

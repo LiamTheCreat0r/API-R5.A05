@@ -1,8 +1,7 @@
-package com.r5._5;
+package com.r5._5.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
-import java.math.BigDecimal;
 
 @Entity
 @Table(name = "joueur")
@@ -25,16 +24,28 @@ public class Joueur {
     @Column(name = "date_naissance")
     private LocalDate dateNaissance;
 
-    @Column(name = "taille", precision = 5, scale = 2)
-    private BigDecimal taille;
+    @Column(name = "taille")
+    private float taille;
 
-    @Column(name = "poids", precision = 5, scale = 2)
-    private BigDecimal poids;
+    @Column(name = "poids")
+    private float poids;
 
     @Column(name = "statut")
     private String statut;
 
     public Joueur() {
+    }
+
+    public Joueur(Integer joueurId, String numeroLicence, String nom, String prenom, LocalDate dateNaissance,
+            float taille, float poids, String statut) {
+        this.joueurId = joueurId;
+        this.numeroLicence = numeroLicence;
+        this.nom = nom;
+        this.prenom = prenom;
+        this.dateNaissance = dateNaissance;
+        this.taille = taille;
+        this.poids = poids;
+        this.statut = statut;
     }
 
     // Getters and setters
@@ -79,19 +90,19 @@ public class Joueur {
         this.dateNaissance = dateNaissance;
     }
 
-    public BigDecimal getTaille() {
+    public float getTaille() {
         return taille;
     }
 
-    public void setTaille(BigDecimal taille) {
+    public void setTaille(float taille) {
         this.taille = taille;
     }
 
-    public BigDecimal getPoids() {
+    public float getPoids() {
         return poids;
     }
 
-    public void setPoids(BigDecimal poids) {
+    public void setPoids(float poids) {
         this.poids = poids;
     }
 
