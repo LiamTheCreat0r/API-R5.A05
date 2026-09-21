@@ -1,9 +1,3 @@
-create database r505_backend;
-
-CREATE USER 'r505'@'localhost' IDENTIFIED BY '7z3AgWdX54Zkq5!';
-GRANT ALL PRIVILEGES ON r505_backend.* TO 'r505'@'localhost';
-FLUSH PRIVILEGES;
-
 drop table if exists participation;
 drop table if exists commentaire;
 drop table if exists joueur;
