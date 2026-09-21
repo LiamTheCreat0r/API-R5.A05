@@ -1,6 +1,8 @@
 package com.r5._5.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.r5._5.model.Joueur;
 import com.r5._5.repository.JoueurRepository;
@@ -25,7 +27,8 @@ public class JoueurController {
     @GetMapping("/{id}")
     public Joueur getOne(@PathVariable Integer id) {
         return joueurRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Joueur not found: " + id));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Joueur not found: " + id));
     }
 
     @PostMapping
@@ -44,6 +47,30 @@ public class JoueurController {
         joueur.setTaille(updated.getTaille());
         joueur.setPoids(updated.getPoids());
         joueur.setStatut(updated.getStatut());
+        return joueurRepository.save(joueur);
+    }
+
+    @PatchMapping("/{id}")
+    public Joueur patch(@PathVariable Integer id, @RequestBody Joueur partial) {
+        Joueur joueur = joueurRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Joueur not found: " + id));
+
+        if (partial.getNumeroLicence() != null)
+            joueur.setNumeroLicence(partial.getNumeroLicence());
+        if (partial.getNom() != null)
+            joueur.setNom(partial.getNom());
+        if (partial.getPrenom() != null)
+            joueur.setPrenom(partial.getPrenom());
+        if (partial.getDateNaissance() != null)
+            joueur.setDateNaissance(partial.getDateNaissance());
+        if (partial.getTaille() != 0.0f)
+            joueur.setTaille(partial.getTaille());
+        if (partial.getPoids() != 0.0f)
+            joueur.setPoids(partial.getPoids());
+        if (partial.getStatut() != null)
+            joueur.setStatut(partial.getStatut());
+
         return joueurRepository.save(joueur);
     }
 
