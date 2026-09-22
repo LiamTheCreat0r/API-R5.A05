@@ -52,6 +52,30 @@ public class RencontreController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<Rencontre> patch(@PathVariable Integer id, @RequestBody Rencontre body) {
+        return rencontreRepository.findById(id)
+                .map(existing -> {
+                    if (body.getDateHeure() != null) {
+                        existing.setDateHeure(body.getDateHeure());
+                    }
+                    if (body.getEquipeAdverse() != null) {
+                        existing.setEquipeAdverse(body.getEquipeAdverse());
+                    }
+                    if (body.getAdresse() != null) {
+                        existing.setAdresse(body.getAdresse());
+                    }
+                    if (body.getLieu() != null) {
+                        existing.setLieu(body.getLieu());
+                    }
+                    if (body.getResultat() != null) {
+                        existing.setResultat(body.getResultat());
+                    }
+                    return ResponseEntity.ok(rencontreRepository.save(existing));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         if (!rencontreRepository.existsById(id)) {
