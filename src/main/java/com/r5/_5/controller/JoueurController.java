@@ -32,6 +32,7 @@ public class JoueurController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Joueur create(@RequestBody Joueur joueur) {
         return joueurRepository.save(joueur);
     }
