@@ -15,12 +15,10 @@ public class Participation {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "joueur_id", nullable = false)
-    // @JsonProperty("joueurId") // keeps the key name the frontend reads
     private Joueur joueur;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "rencontre_id")
-    @JsonProperty("rencontre")
     private Rencontre rencontre;
 
     @Column(name = "titulaire_ou_remplacant", length = 20)

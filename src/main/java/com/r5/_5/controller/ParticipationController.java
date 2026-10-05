@@ -146,12 +146,13 @@ public class ParticipationController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        if (!participationRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        participationRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
+    @DeleteMapping("/{id}/performance")
+    public ResponseEntity<Participation> deletePerformance(@PathVariable Integer id) {
+        return participationRepository.findById(id)
+                .map(existing -> {
+                    existing.setNotePerformance(null);
+                    return ResponseEntity.ok(participationRepository.save(existing));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }
