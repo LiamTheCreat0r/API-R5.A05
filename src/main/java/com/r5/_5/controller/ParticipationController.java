@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import jakarta.validation.Validator;
 
@@ -37,8 +36,7 @@ public class ParticipationController {
         this.rencontreRepository = rencontreRepository;
     }
 
-    // Replace the sent (partial) Joueur with the managed entity, or null if
-    // missing/unknown
+    // Remplace le joueur reçu par celui de la base, ou null s'il est absent/inconnu
     private Joueur resolveJoueur(Joueur sent) {
         if (sent == null || sent.getJoueurId() == null) {
             return null;
@@ -105,7 +103,7 @@ public class ParticipationController {
 
         participation.setJoueur(joueur);
         participation.setRencontre(rencontre);
-        participation.setParticipationId(null); // force an INSERT
+        participation.setParticipationId(null); // force un INSERT
         Participation saved = participationRepository.save(participation);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
@@ -169,7 +167,9 @@ public class ParticipationController {
                     checkDuplicate(existing, existing.getJoueur(), existing.getRencontre());
                     Set<ConstraintViolation<Participation>> violations = validator.validate(existing);
                     if (!violations.isEmpty()) {
-                        throw new ConstraintViolationException(violations);
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, violations.stream()
+                    .map(v -> v.getPropertyPath() + " " + v.getMessage())
+                    .collect(java.util.stream.Collectors.joining(", ")));
                     }
                     return ResponseEntity.ok(participationRepository.save(existing));
                 })
@@ -184,5 +184,14 @@ public class ParticipationController {
                     return ResponseEntity.ok(participationRepository.save(existing));
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+        if (!participationRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        participationRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

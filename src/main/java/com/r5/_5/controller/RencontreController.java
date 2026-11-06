@@ -6,9 +6,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import jakarta.validation.Validator;
 
@@ -44,7 +44,7 @@ public class RencontreController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Rencontre create(@Valid @RequestBody Rencontre rencontre) {
-        rencontre.setRencontreId(null); // force an INSERT, never an update
+        rencontre.setRencontreId(null); // force un INSERT, jamais une modification
         return rencontreRepository.save(rencontre);
     }
 
@@ -83,7 +83,9 @@ public class RencontreController {
                     }
                     Set<ConstraintViolation<Rencontre>> violations = validator.validate(existing);
                     if (!violations.isEmpty()) {
-                        throw new ConstraintViolationException(violations);
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, violations.stream()
+                    .map(v -> v.getPropertyPath() + " " + v.getMessage())
+                    .collect(java.util.stream.Collectors.joining(", ")));
                     }
                     return ResponseEntity.ok(rencontreRepository.save(existing));
                 })
@@ -99,7 +101,7 @@ public class RencontreController {
             rencontreRepository.deleteById(id);
             return ResponseEntity.noContent().build();
         } catch (DataIntegrityViolationException e) {
-            // rencontre still referenced by participation rows
+            // rencontre encore utilisée par des participations
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }

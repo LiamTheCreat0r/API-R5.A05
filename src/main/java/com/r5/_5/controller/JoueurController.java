@@ -9,7 +9,6 @@ import com.r5._5.model.Joueur;
 import com.r5._5.repository.JoueurRepository;
 
 import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import jakarta.validation.Validator;
 
@@ -50,7 +49,7 @@ public class JoueurController {
         if (joueurRepository.existsByNumeroLicence(joueur.getNumeroLicence())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "numeroLicence already used");
         }
-        joueur.setJoueurId(null); // force an INSERT, never an update
+        joueur.setJoueurId(null); // force un INSERT, jamais une modification
         return joueurRepository.save(joueur);
     }
 
@@ -93,10 +92,12 @@ public class JoueurController {
         if (partial.getStatut() != null)
             joueur.setStatut(partial.getStatut());
 
-        // validate the merged entity (a partial body can't be @Valid)
+        // valide le joueur après fusion (un PATCH partiel ne peut pas être @Valid)
         Set<ConstraintViolation<Joueur>> violations = validator.validate(joueur);
         if (!violations.isEmpty()) {
-            throw new ConstraintViolationException(violations);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, violations.stream()
+                    .map(v -> v.getPropertyPath() + " " + v.getMessage())
+                    .collect(java.util.stream.Collectors.joining(", ")));
         }
         return joueurRepository.save(joueur);
     }
@@ -109,7 +110,7 @@ public class JoueurController {
         try {
             joueurRepository.deleteById(id);
         } catch (DataIntegrityViolationException e) {
-            // joueur still referenced by commentaire / participation rows
+            // joueur encore utilisé par des commentaires ou des participations
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Joueur still referenced");
         }
     }

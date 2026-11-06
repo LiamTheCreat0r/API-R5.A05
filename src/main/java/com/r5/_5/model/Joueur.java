@@ -64,7 +64,7 @@ public class Joueur {
         this.statut = statut;
     }
 
-    // Getters and setters
+    // Getters et setters
 
     public Integer getJoueurId() {
         return joueurId;
