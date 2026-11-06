@@ -1,6 +1,7 @@
 package com.r5._5.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
 @Entity
@@ -12,6 +13,7 @@ public class Commentaire {
     @Column(name = "commentaire_id")
     private Integer commentaireId;
 
+    @Size(max = 200)
     @Column(name = "contenu", length = 200)
     private String contenu;
 

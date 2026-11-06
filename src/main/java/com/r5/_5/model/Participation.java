@@ -3,6 +3,9 @@ package com.r5._5.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 
 @Entity
 @Table(name = "participation")
@@ -21,12 +24,16 @@ public class Participation {
     @JoinColumn(name = "rencontre_id")
     private Rencontre rencontre;
 
+    @Pattern(regexp = "TITULAIRE|REMPLACANT")
     @Column(name = "titulaire_ou_remplacant", length = 20)
     private String titulaireOuRemplacant;
 
+    @Pattern(regexp = "TOPLANE|JUNGLE|MIDLANE|ADCARRY|SUPPORT")
     @Column(name = "poste", length = 20)
     private String poste;
 
+    @Min(0)
+    @Max(10)
     @Column(name = "note_performance")
     @JsonProperty("performance")
     private Integer notePerformance;

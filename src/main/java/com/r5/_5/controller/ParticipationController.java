@@ -9,6 +9,14 @@ import com.r5._5.repository.RencontreRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
+import jakarta.validation.Validator;
+
+import java.util.Set;
 
 import java.util.List;
 
@@ -19,9 +27,11 @@ public class ParticipationController {
     private final ParticipationRepository participationRepository;
     private final JoueurRepository joueurRepository;
     private final RencontreRepository rencontreRepository;
+    private final Validator validator;
 
     public ParticipationController(ParticipationRepository participationRepository,
-            JoueurRepository joueurRepository, RencontreRepository rencontreRepository) {
+            JoueurRepository joueurRepository, RencontreRepository rencontreRepository, Validator validator) {
+        this.validator = validator;
         this.participationRepository = participationRepository;
         this.joueurRepository = joueurRepository;
         this.rencontreRepository = rencontreRepository;
@@ -41,6 +51,14 @@ public class ParticipationController {
             return null;
         }
         return rencontreRepository.findById(sent.getRencontreId()).orElse(null);
+    }
+
+    private void checkDuplicate(Participation existing, Joueur joueur, Rencontre rencontre) {
+        if (rencontre != null && participationRepository
+                .existsByJoueur_JoueurIdAndRencontre_RencontreIdAndParticipationIdNot(
+                        joueur.getJoueurId(), rencontre.getRencontreId(), existing.getParticipationId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Participation already exists");
+        }
     }
 
     @GetMapping
@@ -66,7 +84,7 @@ public class ParticipationController {
     }
 
     @PostMapping
-    public ResponseEntity<Participation> create(@RequestBody Participation participation) {
+    public ResponseEntity<Participation> create(@Valid @RequestBody Participation participation) {
         Joueur joueur = resolveJoueur(participation.getJoueur());
         if (joueur == null) {
             return ResponseEntity.badRequest().build();
@@ -80,6 +98,11 @@ public class ParticipationController {
             }
         }
 
+        if (rencontre != null && participationRepository.existsByJoueur_JoueurIdAndRencontre_RencontreId(
+                joueur.getJoueurId(), rencontre.getRencontreId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Participation already exists");
+        }
+
         participation.setJoueur(joueur);
         participation.setRencontre(rencontre);
         participation.setParticipationId(null); // force an INSERT
@@ -88,7 +111,7 @@ public class ParticipationController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Participation> update(@PathVariable Integer id, @RequestBody Participation body) {
+    public ResponseEntity<Participation> update(@PathVariable Integer id, @Valid @RequestBody Participation body) {
         return participationRepository.findById(id)
                 .map(existing -> {
                     Joueur joueur = resolveJoueur(body.getJoueur());
@@ -103,6 +126,8 @@ public class ParticipationController {
                             return ResponseEntity.badRequest().<Participation>build();
                         }
                     }
+
+                    checkDuplicate(existing, joueur, rencontre);
 
                     existing.setJoueur(joueur);
                     existing.setRencontre(rencontre);
@@ -140,6 +165,11 @@ public class ParticipationController {
                     }
                     if (body.getNotePerformance() != null) {
                         existing.setNotePerformance(body.getNotePerformance());
+                    }
+                    checkDuplicate(existing, existing.getJoueur(), existing.getRencontre());
+                    Set<ConstraintViolation<Participation>> violations = validator.validate(existing);
+                    if (!violations.isEmpty()) {
+                        throw new ConstraintViolationException(violations);
                     }
                     return ResponseEntity.ok(participationRepository.save(existing));
                 })

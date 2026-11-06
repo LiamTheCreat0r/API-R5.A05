@@ -1,6 +1,12 @@
 package com.r5._5.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -12,24 +18,34 @@ public class Joueur {
     @Column(name = "joueur_id")
     private Integer joueurId;
 
+    @NotBlank
+    @Size(min = 5, max = 5)
     @Column(name = "numero_licence", nullable = false, length = 5)
     private String numeroLicence;
 
+    @Size(max = 50)
     @Column(name = "nom", length = 50)
     private String nom;
 
+    @Size(max = 50)
     @Column(name = "prenom", length = 50)
     private String prenom;
 
     @Column(name = "date_naissance")
     private LocalDate dateNaissance;
 
-    @Column(name = "taille")
-    private float taille;
+    @DecimalMin("0.0")
+    @DecimalMax("999.99")
+    @Column(name = "taille", precision = 5, scale = 2)
+    private BigDecimal taille;
 
-    @Column(name = "poids")
-    private float poids;
+    @DecimalMin("0.0")
+    @DecimalMax("999.99")
+    @Column(name = "poids", precision = 5, scale = 2)
+    private BigDecimal poids;
 
+    @Pattern(regexp = "ACTIF|BLESSE|SUSPENDU|ABSENT")
+    @Size(max = 255)
     @Column(name = "statut")
     private String statut;
 
@@ -37,7 +53,7 @@ public class Joueur {
     }
 
     public Joueur(Integer joueurId, String numeroLicence, String nom, String prenom, LocalDate dateNaissance,
-            float taille, float poids, String statut) {
+            BigDecimal taille, BigDecimal poids, String statut) {
         this.joueurId = joueurId;
         this.numeroLicence = numeroLicence;
         this.nom = nom;
@@ -90,19 +106,19 @@ public class Joueur {
         this.dateNaissance = dateNaissance;
     }
 
-    public float getTaille() {
+    public BigDecimal getTaille() {
         return taille;
     }
 
-    public void setTaille(float taille) {
+    public void setTaille(BigDecimal taille) {
         this.taille = taille;
     }
 
-    public float getPoids() {
+    public BigDecimal getPoids() {
         return poids;
     }
 
-    public void setPoids(float poids) {
+    public void setPoids(BigDecimal poids) {
         this.poids = poids;
     }
 

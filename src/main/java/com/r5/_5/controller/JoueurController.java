@@ -1,5 +1,6 @@
 package com.r5._5.controller;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -7,16 +8,30 @@ import org.springframework.web.server.ResponseStatusException;
 import com.r5._5.model.Joueur;
 import com.r5._5.repository.JoueurRepository;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
+import jakarta.validation.Validator;
+
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/joueurs")
 public class JoueurController {
 
     private final JoueurRepository joueurRepository;
+    private final Validator validator;
 
-    public JoueurController(JoueurRepository joueurRepository) {
+    public JoueurController(JoueurRepository joueurRepository, Validator validator) {
         this.joueurRepository = joueurRepository;
+        this.validator = validator;
+    }
+
+    private Joueur findOrThrow(Integer id) {
+        return joueurRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Joueur not found: " + id));
     }
 
     @GetMapping
@@ -26,21 +41,25 @@ public class JoueurController {
 
     @GetMapping("/{id}")
     public Joueur getOne(@PathVariable Integer id) {
-        return joueurRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Joueur not found: " + id));
+        return findOrThrow(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Joueur create(@RequestBody Joueur joueur) {
+    public Joueur create(@Valid @RequestBody Joueur joueur) {
+        if (joueurRepository.existsByNumeroLicence(joueur.getNumeroLicence())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "numeroLicence already used");
+        }
+        joueur.setJoueurId(null); // force an INSERT, never an update
         return joueurRepository.save(joueur);
     }
 
     @PutMapping("/{id}")
-    public Joueur update(@PathVariable Integer id, @RequestBody Joueur updated) {
-        Joueur joueur = joueurRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Joueur not found: " + id));
+    public Joueur update(@PathVariable Integer id, @Valid @RequestBody Joueur updated) {
+        Joueur joueur = findOrThrow(id);
+        if (joueurRepository.existsByNumeroLicenceAndJoueurIdNot(updated.getNumeroLicence(), id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "numeroLicence already used");
+        }
         joueur.setNumeroLicence(updated.getNumeroLicence());
         joueur.setNom(updated.getNom());
         joueur.setPrenom(updated.getPrenom());
@@ -53,30 +72,45 @@ public class JoueurController {
 
     @PatchMapping("/{id}")
     public Joueur patch(@PathVariable Integer id, @RequestBody Joueur partial) {
-        Joueur joueur = joueurRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Joueur not found: " + id));
+        Joueur joueur = findOrThrow(id);
 
-        if (partial.getNumeroLicence() != null)
+        if (partial.getNumeroLicence() != null) {
+            if (joueurRepository.existsByNumeroLicenceAndJoueurIdNot(partial.getNumeroLicence(), id)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "numeroLicence already used");
+            }
             joueur.setNumeroLicence(partial.getNumeroLicence());
+        }
         if (partial.getNom() != null)
             joueur.setNom(partial.getNom());
         if (partial.getPrenom() != null)
             joueur.setPrenom(partial.getPrenom());
         if (partial.getDateNaissance() != null)
             joueur.setDateNaissance(partial.getDateNaissance());
-        if (partial.getTaille() != 0.0f)
+        if (partial.getTaille() != null)
             joueur.setTaille(partial.getTaille());
-        if (partial.getPoids() != 0.0f)
+        if (partial.getPoids() != null)
             joueur.setPoids(partial.getPoids());
         if (partial.getStatut() != null)
             joueur.setStatut(partial.getStatut());
 
+        // validate the merged entity (a partial body can't be @Valid)
+        Set<ConstraintViolation<Joueur>> violations = validator.validate(joueur);
+        if (!violations.isEmpty()) {
+            throw new ConstraintViolationException(violations);
+        }
         return joueurRepository.save(joueur);
     }
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Integer id) {
-        joueurRepository.deleteById(id);
+        if (!joueurRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Joueur not found: " + id);
+        }
+        try {
+            joueurRepository.deleteById(id);
+        } catch (DataIntegrityViolationException e) {
+            // joueur still referenced by commentaire / participation rows
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Joueur still referenced");
+        }
     }
 }

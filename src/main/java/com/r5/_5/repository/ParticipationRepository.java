@@ -9,4 +9,9 @@ public interface ParticipationRepository extends JpaRepository<Participation, In
     List<Participation> findByJoueur_JoueurId(Integer joueurId);
 
     List<Participation> findByRencontre_RencontreId(Integer rencontreId);
+
+    boolean existsByJoueur_JoueurIdAndRencontre_RencontreId(Integer joueurId, Integer rencontreId);
+
+    boolean existsByJoueur_JoueurIdAndRencontre_RencontreIdAndParticipationIdNot(
+            Integer joueurId, Integer rencontreId, Integer participationId);
 }

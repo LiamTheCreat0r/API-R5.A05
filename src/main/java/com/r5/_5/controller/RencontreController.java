@@ -7,6 +7,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
+import jakarta.validation.Validator;
+
+import java.util.Set;
+
 import java.util.List;
 
 @RestController
@@ -15,8 +22,11 @@ public class RencontreController {
 
     private final RencontreRepository rencontreRepository;
 
-    public RencontreController(RencontreRepository rencontreRepository) {
+    private final Validator validator;
+
+    public RencontreController(RencontreRepository rencontreRepository, Validator validator) {
         this.rencontreRepository = rencontreRepository;
+        this.validator = validator;
     }
 
     @GetMapping
@@ -33,13 +43,13 @@ public class RencontreController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Rencontre create(@RequestBody Rencontre rencontre) {
+    public Rencontre create(@Valid @RequestBody Rencontre rencontre) {
         rencontre.setRencontreId(null); // force an INSERT, never an update
         return rencontreRepository.save(rencontre);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Rencontre> update(@PathVariable Integer id, @RequestBody Rencontre body) {
+    public ResponseEntity<Rencontre> update(@PathVariable Integer id, @Valid @RequestBody Rencontre body) {
         return rencontreRepository.findById(id)
                 .map(existing -> {
                     existing.setDateHeure(body.getDateHeure());
@@ -70,6 +80,10 @@ public class RencontreController {
                     }
                     if (body.getResultat() != null) {
                         existing.setResultat(body.getResultat());
+                    }
+                    Set<ConstraintViolation<Rencontre>> violations = validator.validate(existing);
+                    if (!violations.isEmpty()) {
+                        throw new ConstraintViolationException(violations);
                     }
                     return ResponseEntity.ok(rencontreRepository.save(existing));
                 })

@@ -1,6 +1,8 @@
 package com.r5._5.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Entity
@@ -15,15 +17,19 @@ public class Rencontre {
     @Column(name = "date_heure")
     private LocalDateTime dateHeure;
 
+    @Size(max = 50)
     @Column(name = "equipe_adverse", length = 50)
     private String equipeAdverse;
 
+    @Size(max = 255)
     @Column(name = "adresse")
     private String adresse;
 
+    @Pattern(regexp = "DOMICILE|EXTERIEUR")
     @Column(name = "lieu", length = 20)
     private String lieu; // DOMICILE / EXTERIEUR
 
+    @Pattern(regexp = "VICTOIRE|DEFAITE|NUL")
     @Column(name = "resultat", length = 20)
     private String resultat; // VICTOIRE / DEFAITE / NUL, null si pas jouée
 

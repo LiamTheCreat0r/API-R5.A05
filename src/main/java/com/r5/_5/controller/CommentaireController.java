@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+
 import java.util.List;
 
 @RestController
@@ -39,8 +41,8 @@ public class CommentaireController {
     }
 
     @PostMapping
-    public ResponseEntity<Commentaire> create(@RequestBody Commentaire commentaire) {
-        if (!joueurRepository.existsById(commentaire.getJoueurId())) {
+    public ResponseEntity<Commentaire> create(@Valid @RequestBody Commentaire commentaire) {
+        if (commentaire.getJoueurId() == null || !joueurRepository.existsById(commentaire.getJoueurId())) {
             return ResponseEntity.badRequest().build();
         }
         commentaire.setCommentaireId(null);
@@ -50,11 +52,13 @@ public class CommentaireController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Commentaire> update(@PathVariable Integer id, @RequestBody Commentaire body) {
+    public ResponseEntity<Commentaire> update(@PathVariable Integer id, @Valid @RequestBody Commentaire body) {
         return commentaireRepository.findById(id)
                 .map(existing -> {
                     existing.setContenu(body.getContenu());
-                    existing.setDate(body.getDate());
+                    if (body.getDate() != null) {
+                        existing.setDate(body.getDate());
+                    }
                     return ResponseEntity.ok(commentaireRepository.save(existing));
                 })
                 .orElse(ResponseEntity.notFound().build());
