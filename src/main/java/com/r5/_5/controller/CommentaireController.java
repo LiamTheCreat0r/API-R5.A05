@@ -1,5 +1,7 @@
 package com.r5._5.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import com.r5._5.model.Commentaire;
 import com.r5._5.repository.CommentaireRepository;
 import com.r5._5.repository.JoueurRepository;
@@ -12,6 +14,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
+@PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("/commentaires")
 public class CommentaireController {
 

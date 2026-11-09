@@ -1,5 +1,7 @@
 package com.r5._5.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import com.r5._5.model.Joueur;
 import com.r5._5.model.Participation;
 import com.r5._5.model.Rencontre;
@@ -20,6 +22,7 @@ import java.util.Set;
 import java.util.List;
 
 @RestController
+@PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("/participations")
 public class ParticipationController {
 

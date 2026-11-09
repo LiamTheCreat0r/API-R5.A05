@@ -1,5 +1,7 @@
 package com.r5._5.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 @RestController
+@PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("/joueurs")
 public class JoueurController {
 

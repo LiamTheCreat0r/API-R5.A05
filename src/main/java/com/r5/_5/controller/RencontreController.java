@@ -1,5 +1,7 @@
 package com.r5._5.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import com.r5._5.model.Rencontre;
 import com.r5._5.repository.RencontreRepository;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -17,6 +19,7 @@ import java.util.Set;
 import java.util.List;
 
 @RestController
+@PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("/rencontres")
 public class RencontreController {
 
